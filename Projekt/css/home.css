@@ -1,0 +1,45 @@
+.Baner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    overflow: hidden;
+    height: 300px;
+}
+
+.Baner img {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.Baner .left-image {
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+}
+
+.Baner .right-image {
+    clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.about-section {
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.contact-info-map {
+    display: flex;
+    padding: 20px;
+}
+
+.contact-info {
+    width: 50%;
+    padding: 20px;
+    text-align: center;
+}
+
+.map-container {
+    width: 50%;
+    height: 400px;
+}
