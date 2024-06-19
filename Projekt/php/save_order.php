@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user_id = $_SESSION['user_id'];
-    $vehicle_id = $_POST['vehicle_id'];
+    $vehicle_ids = $_POST['vehicle_ids']; 
     $name = trim($_POST['name']);
     $surname = trim($_POST['surname']);
     $email = trim($_POST['email']);
@@ -43,37 +43,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors[] = "Nieprawidłowa opcja płatności.";
     }
 
-    // Sprawdzenie, czy pojazd istnieje w bazie danych
-    $sql_vehicle = "SELECT * FROM vehicles WHERE id = ?";
+    // Sprawdzenie, czy pojazdy istnieją w bazie danych
+    $placeholders = implode(',', array_fill(0, count($vehicle_ids), '?'));
+    $sql_vehicle = "SELECT id FROM vehicles WHERE id IN ($placeholders)";
     $stmt_vehicle = $conn->prepare($sql_vehicle);
-    $stmt_vehicle->bind_param("i", $vehicle_id);
+    $stmt_vehicle->bind_param(str_repeat('i', count($vehicle_ids)), ...$vehicle_ids);
     $stmt_vehicle->execute();
     $result_vehicle = $stmt_vehicle->get_result();
-    $vehicle = $result_vehicle->fetch_assoc();
 
-    if (!$vehicle) {
-        $errors[] = "Pojazd nie istnieje.";
+    $existing_vehicle_ids = [];
+    while ($row = $result_vehicle->fetch_assoc()) {
+        $existing_vehicle_ids[] = $row['id'];
+    }
+
+    if (count($existing_vehicle_ids) !== count($vehicle_ids)) {
+        $errors[] = "Niektóre pojazdy nie istnieją.";
     }
 
     if (empty($errors)) {
-        // Zapisz zamówienie w bazie danych
-        $sql = "INSERT INTO orders (user_id, vehicle_id, name, surname, email, country, city, address, payment, purchase_date) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("iisssssss", $user_id, $vehicle_id, $name, $surname, $email, $country, $city, $address, $payment);
+        $conn->begin_transaction();
 
-        if ($stmt->execute()) {
+        try {
+            foreach ($existing_vehicle_ids as $vehicle_id) {
+                // Zapisz zamówienie w bazie danych
+                $sql = "INSERT INTO orders (user_id, vehicle_id, name, surname, email, country, city, address, payment, purchase_date) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("iisssssss", $user_id, $vehicle_id, $name, $surname, $email, $country, $city, $address, $payment);
+                $stmt->execute();
+            }
+
+            $conn->commit();
+
+            // Usunięcie zamówionych przedmiotów z koszyka
+            $_SESSION['cart'] = array_diff($_SESSION['cart'], $existing_vehicle_ids);
+
             echo "<script>alert('Zakup został pomyślnie zrealizowany!');</script>";
             echo "<script>
                     setTimeout(function(){
                         window.location.href = 'order_history.php';
                     }, 2500);
                   </script>";
-        } else {
-            echo "Błąd przy składaniu zamówienia: " . $stmt->error;
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo "Błąd przy składaniu zamówienia: " . $e->getMessage();
         }
-
-        $stmt->close();
     } else {
         // Wyświetlanie błędów
         echo '<div class="errors">';

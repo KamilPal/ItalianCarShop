@@ -29,7 +29,7 @@ if ($filter_email !== '') {
 $sort_by = isset($_GET['sort_by']) ? $_GET['sort_by'] : 'id';
 $sort_order = isset($_GET['sort_order']) && $_GET['sort_order'] === 'desc' ? 'DESC' : 'ASC';
 
-$valid_sort_columns = ['id', 'name', 'surname', 'email', 'admin'];
+$valid_sort_columns = ['id', 'name', 'surname', 'email', 'admin', 'is_active'];
 if (!in_array($sort_by, $valid_sort_columns)) {
     $sort_by = 'id';
 }
@@ -74,32 +74,37 @@ $result = $conn->query($sql);
 </nav>
 <div class="italian-flag"></div>
 <h2>Zarządzasz użytkownikami</h2>
-<div class="container">
+<div class="center-link">
     <div class="button-group">
         <a href="create_user.php" class="button">Dodaj nowego użytkownika</a>
     </div>
+</div>
+<div class="container">
     <div class="button-group">
         <form method="get" action="" class="filter-form">
-            <label for="filter_name">Imię:</label>
-            <input type="text" id="filter_name" name="filter_name" value="<?php echo htmlspecialchars($filter_name); ?>">
-            
-            <label for="filter_surname">Nazwisko:</label>
-            <input type="text" id="filter_surname" name="filter_surname" value="<?php echo htmlspecialchars($filter_surname); ?>">
-            
-            <label for="filter_email">E-mail:</label>
-            <input type="text" id="filter_email" name="filter_email" value="<?php echo htmlspecialchars($filter_email); ?>">
-            
-            <button type="submit">Filtruj</button>
+            <div class="form-group">
+                <label for="filter_name">Imię:</label>
+                <input type="text" id="filter_name" name="filter_name" value="<?php echo htmlspecialchars($filter_name); ?>">
+                
+                <label for="filter_surname">Nazwisko:</label>
+                <input type="text" id="filter_surname" name="filter_surname" value="<?php echo htmlspecialchars($filter_surname); ?>">
+                
+                <label for="filter_email">E-mail:</label>
+                <input type="text" id="filter_email" name="filter_email" value="<?php echo htmlspecialchars($filter_email); ?>">
+                
+                <button type="submit">Filtruj</button>
+            </div>
         </form>
     </div>
     <table>
         <tr>
-        <th>ID</th>
-        <th>Imie</th>
-        <th>Nazwisko</th>
-        <th>E-mail</th>            
-        <th>Admin</th>
-        <th>Akcje</th>
+            <th>ID</th>
+            <th>Imię</th>
+            <th>Nazwisko</th>
+            <th>E-mail</th>
+            <th>Admin</th>
+            <th>Czy aktywny</th>
+            <th>Akcje</th>
         </tr>
         <?php while($row = $result->fetch_assoc()): ?>
         <tr>
@@ -108,12 +113,11 @@ $result = $conn->query($sql);
             <td><?php echo $row['surname']; ?></td>
             <td><?php echo $row['email']; ?></td>
             <td><?php echo $row['admin'] ? 'Tak' : 'Nie'; ?></td>
+            <td><?php echo $row['is_active'] ? 'Tak' : 'Nie'; ?></td>
             <td>
-                <a href="edit_user.php?id=<?php echo $row['id']; ?>">Edytuj</a>
-                <form action="delete_user.php" method="post" style="display:inline;">
-                    <input type="hidden" name="user_id" value="<?php echo $row['id']; ?>">
-                    <button type="submit" name="delete_user">Usuń</button>
-                </form>
+            <div class="button-group">
+            <button><a href="edit_user.php?id=<?php echo $row['id']; ?>">Edytuj</a></button>
+            </div>
             </td>
         </tr>
         <?php endwhile; ?>

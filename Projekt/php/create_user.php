@@ -78,8 +78,7 @@ $conn->close();
 <html>
 <head>
     <title>Dodaj użytkownika</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
 <nav class="navbar">
@@ -104,15 +103,17 @@ $conn->close();
                 </div>
             </div>
             <a href="shop.php">Sklep</a>
-            <a href="home.php">Strona główna</a>
+            <a href="admin.php">Powrót do Panelu Admina</a>
         </div>
     </nav>
     <div class="italian-flag"></div>
     <h2>Dodaj nowego użytkownika</h2>
     <div class="container">
     <form action="create_user.php" method="post" onsubmit="return validateForm()">
+    <div class="form-group">
         <label for="name">Imię:</label>
         <input type="text" id="name" name="name" value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>" required><br>
+        <div class="form-group">
         <label for="surname">Nazwisko:</label>
         <input type="text" id="surname" name="surname" value="<?php echo isset($surname) ? htmlspecialchars($surname) : ''; ?>" required><br>
         <label for="email">E-mail:</label>
@@ -125,6 +126,11 @@ $conn->close();
         <input type="checkbox" id="admin" name="admin" <?php echo $admin ? 'checked' : ''; ?>><br>
         <button type="submit">Dodaj użytkownika</button>
     </form>
+    </div>
+    </div>
+    <div class="center-link">
+            <p><a href="manage_users.php">Powrót do zarządzania użykownikami</a></p>
+    </div>
     </div>
     <div class="italian-flag"></div> 
     <footer class="footer">

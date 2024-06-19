@@ -108,8 +108,7 @@ $conn->close();
 <html>
 <head>
     <title>Edycja pojazdu</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
 <nav class="navbar">
@@ -143,6 +142,7 @@ $conn->close();
     <div class="container">
         <form action="edit_vehicle.php" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
             <input type="hidden" name="vehicle_id" value="<?php echo htmlspecialchars($vehicle['id']); ?>">
+            <div class="form-group">
             <label for="brand">Marka:</label>
             <select id="brand" name="brand" required>
                 <option value="">Wybierz markę</option>
@@ -155,23 +155,30 @@ $conn->close();
                 <option value="Maserati" <?php if ($vehicle['brand'] === 'Maserati') echo 'selected'; ?>>Maserati</option>
                 <option value="Pagani" <?php if ($vehicle['brand'] === 'Pagani') echo 'selected'; ?>>Pagani</option>
             </select>
-            <br>
+            </div>
+            <div class="form-group">
             <label for="model">Model:</label>
             <input type="text" id="model" name="model" value="<?php echo htmlspecialchars($vehicle['model']); ?>" required>
-            <br>
+            </div>
+            <div class="form-group">
             <label for="year">Rok:</label>
             <input type="number" id="year" name="year" value="<?php echo htmlspecialchars($vehicle['year']); ?>" required>
-            <br>
+            </div>
+            <div class="form-group">
             <label for="price">Cena:</label>
             <input type="number" step="0.01" id="price" name="price" value="<?php echo htmlspecialchars($vehicle['price']); ?>" required>
-            <br>
+            </div>
+            <div class="form-group">
             <label for="image">Zdjęcie:</label>
             <input type="file" id="image" name="image">
-            <br>
+            </div>
+            <div class="form-group">
             <label for="description">Opis:</label>
             <textarea id="description" name="description" required><?php echo htmlspecialchars($vehicle['description']); ?></textarea>
-            <br>
+            </div>
+            <div class="form-group">
             <button type="submit">Zapisz zmiany</button>
+            </div>
         </form>
         <?php
         if (!empty($errors)) {
@@ -182,8 +189,10 @@ $conn->close();
             echo '</div>';
         }
         ?>
+            <div class="center-link">
+            <p><a href="vehicles.php">Powrót do zarządzania pojazdami</a></p>
+            </div>
     </div>
-    <p><a href="vehicles.php">Powrót do zarządzania pojazdami</a></p>
     <div class="italian-flag"></div> 
     <footer class="footer">
         <div class="social-media">

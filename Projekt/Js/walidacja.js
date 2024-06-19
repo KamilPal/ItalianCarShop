@@ -4,6 +4,10 @@ function validateForm() {
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
     var confirmPassword = document.getElementById("confirm_password").value;
+    var country = document.getElementById("country").value;
+    var city = document.getElementById("city").value;
+    var address = document.getElementById("address").value;
+    var payment = document.getElementById("payment").value;
     var errors = [];
 
     if (!name.match(/^[a-zA-Z]{3,}$/)) {
@@ -16,6 +20,21 @@ function validateForm() {
 
     if (!email.match(/^\S+@\S+\.\S+$/)) {
         errors.push("Email powinien być w prawidłowym formacie.");
+    }
+    if (country.length < 3) {
+        errors.push("Kraj powinien mieć co najmniej 3 znaki.");
+    }
+
+    if (city.length < 2) {
+        errors.push("Miasto powinno mieć co najmniej 2 znaki.");
+    }
+
+    if (address.length < 5) {
+        errors.push("Adres powinien mieć co najmniej 5 znaków.");
+    }
+
+    if (!payment) {
+        errors.push("Proszę wybrać metodę płatności.");
     }
 
     if (password && password.length < 6) {

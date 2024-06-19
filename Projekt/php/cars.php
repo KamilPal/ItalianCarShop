@@ -1,6 +1,5 @@
 <?php
 session_start();
-
 include('config.php');
 
 // Pobierz dane z formularza wyszukiwania, jeśli zostały przesłane
@@ -41,6 +40,32 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
+// Funkcja do sprawdzania, czy pojazd jest już w koszyku
+function isInCart($vehicle_id) {
+    if (!isset($_SESSION['cart'])) {
+        return false;
+    }
+    return in_array($vehicle_id, array_column($_SESSION['cart'], 'id'));
+}
+
+// Obsługa dodawania do koszyka
+if (isset($_POST['add_to_cart'])) {
+    $vehicle_id = $_POST['vehicle_id'];
+    if (!isInCart($vehicle_id)) {
+        $cart_item = [
+            'id' => $vehicle_id,
+            'brand' => $_POST['brand'],
+            'model' => $_POST['model'],
+            'price' => $_POST['price'],
+            'image' => $_POST['image']
+        ];
+        $_SESSION['cart'][] = $cart_item;
+        echo "<script>alert('Pojazd dodany do koszyka!');</script>";
+    } else {
+        echo "<script>alert('Pojazd jest już w koszyku!');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -51,6 +76,7 @@ $result = $stmt->get_result();
     <title>Pojazdy <?php echo htmlspecialchars($brand); ?></title>
     <link rel="stylesheet" href="../css/general.css">
     <link rel="stylesheet" href="../css/cars.css">
+    <link rel="stylesheet" href="../css/button.css">
 </head>
 <body>
     <nav class="navbar">
@@ -76,16 +102,17 @@ $result = $stmt->get_result();
             </div>
             <a href="shop.php">Sklep</a>
             <a href="home.php">Strona główna</a>
+            <a href="cart.php">Koszyk</a>
         </div>
     </nav>
     <div class="italian-flag"></div>
     <h2 style="text-align: center;">Wybierasz pojazdy <?php echo htmlspecialchars(ucfirst($brand)); ?>:</h2>
     <div style="text-align: center; margin-bottom: 5px;">
-        <button onclick="window.location.href='shop.php'" style="color: white; background-color:#1f1f1f; padding: 10px 20px;">Wróć do producentów</button>
-        <button onclick="window.location.href='all_cars.php'" style="color: white; background-color:#1f1f1f; padding: 10px 20px;">Wyświetl wszystkie pojazdy</button>
+        <button onclick="window.location.href='shop.php'" style="background-color:#1f1f1f;">Wróć do producentów</button>
+        <button onclick="window.location.href='all_cars.php'" style="background-color:#1f1f1f;">Wyświetl wszystkie pojazdy</button>
     </div>
-    <div class="container">
-        <form action="all_cars.php" method="GET" class="search-form">
+        <div style="text-align: center;">
+        <form action="cars.php" method="GET" class="search-form">
             <input type="hidden" name="brand" value="<?php echo htmlspecialchars($brand); ?>">
             <label for="model">Model:</label>
             <input type="text" id="model" name="model" value="<?php echo htmlspecialchars($model); ?>">
@@ -97,6 +124,8 @@ $result = $stmt->get_result();
             <input type="number" id="price_to" name="price_to" value="<?php echo htmlspecialchars($price_to); ?>">
             <button type="submit">Szukaj</button>
         </form>
+        </div>
+        <div class="container">
         <div class="vehicles">
             <?php
             if ($result->num_rows > 0) {
@@ -124,12 +153,13 @@ $result = $stmt->get_result();
                     echo "<p>Cena: " . $row["price"] . "zł</p>";
                     echo "<p>Opis: " . $row["description"] . "</p>";
                     if (isset($_SESSION['user_id'])) {
-                        echo "<form action='purchase.php' method='get'>";
-                        echo "<input type='hidden' name='vehicle_id' value='" . $row["id"] . "'>";
-                        echo "<button type='submit' class='purchase-button'>Kup</button>";
-                        echo "</form>";
+                        if (!in_array($row['id'], $_SESSION['cart'] ?? [])) {
+                            echo "<button class='cart-button' onclick='addToCart(" . $row["id"] . ")'>Dodaj do koszyka</button>";
+                        } else {
+                            echo "<button class='cart-button' onclick='removeFromCart(" . $row["id"] . ")'>Usuń z koszyka</button>";
+                        }
                     } else {
-                        echo "<p>Musisz być zalogowany, aby kupić ten pojazd.</p>";
+                        echo "<p>Musisz być zalogowany, aby dodać ten pojazd do koszyka.</p>";
                     }
                     echo "</div>";
                     echo "</div>";
@@ -165,15 +195,44 @@ $result = $stmt->get_result();
         }
 
         window.onclick = function(event) {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                    document.body.classList.remove('modal-open');
-                }
-            });
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
         }
+
+        function addToCart(vehicleId) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'add_to_cart.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('Pojazd został dodany do koszyka.');
+                    window.location.reload();
+                } else {
+                    alert('Wystąpił błąd przy dodawaniu pojazdu do koszyka.');
+                }
+            };
+            xhr.send('vehicle_id=' + vehicleId);
+        }
+
+        function removeFromCart(vehicleId) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'remove_from_cart.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('Pojazd został usunięty z koszyka.');
+                    window.location.reload();
+                } else {
+                    alert('Wystąpił błąd przy usuwaniu pojazdu z koszyka.');
+                }
+            };
+            xhr.send('vehicle_id=' + vehicleId);
+        }
+
     </script>
+    
     <script src="../Js/menu.js"></script>
 </body>
 </html>

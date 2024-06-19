@@ -56,6 +56,7 @@ $result = $stmt->get_result();
 </nav>
 <div class="italian-flag"></div>
 <div class="container">
+<a href="profile.php">Powrót do profilu</a>
     <h2>Historia Zamówień</h2>
     <table>
         <tr>
@@ -92,7 +93,6 @@ $result = $stmt->get_result();
         ?>
     </table>
 </div>
-<a href="profile.php">Powrót do profilu</a>
 <div class="italian-flag"></div>
 <footer class="footer">
     <div class="social-media">

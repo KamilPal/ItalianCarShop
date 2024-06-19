@@ -64,8 +64,7 @@ $conn->close();
 <html>
 <head>
     <title>Wprowadzanie nowego pojazdu</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
     <nav class="navbar">
@@ -97,35 +96,43 @@ $conn->close();
     <h2>Wprowadzasz nowy pojazd</h2>
     <div class="container">
         <form action="add_vehicle.php" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
-            <label for="brand">Marka:</label>
-            <select id="brand" name="brand" required>
-                <option value="">Wybierz markę</option>
-                <option value="Abarth">Abarth</option>
-                <option value="Alfa Romeo">Alfa Romeo</option>
-                <option value="Ferrari">Ferrari</option>
-                <option value="Fiat">Fiat</option>
-                <option value="Lamborghini">Lamborghini</option>
-                <option value="Lancia">Lancia</option>
-                <option value="Maserati">Maserati</option>
-                <option value="Pagani">Pagani</option>
-            </select>
-            <br>
-            <label for="model">Model:</label>
-            <input type="text" id="model" name="model" required>
-            <br>
-            <label for="year">Rok:</label>
-            <input type="number" id="year" name="year" required>
-            <br>
-            <label for="price">Cena:</label>
-            <input type="number" id="price" name="price" required>
-            <br>
-            <label for="image">Zdjęcie:</label>
-            <input type="file" id="image" name="image" required>
-            <br>
-            <label for="description">Opis:</label>
-            <textarea id="description" name="description" required></textarea>
-            <br>
-            <button type="submit">Dodaj pojazd</button>
+            <div class="form-group">
+                <label for="brand">Marka:</label>
+                <select id="brand" name="brand" required>
+                    <option value="">Wybierz markę</option>
+                    <option value="Abarth">Abarth</option>
+                    <option value="Alfa Romeo">Alfa Romeo</option>
+                    <option value="Ferrari">Ferrari</option>
+                    <option value="Fiat">Fiat</option>
+                    <option value="Lamborghini">Lamborghini</option>
+                    <option value="Lancia">Lancia</option>
+                    <option value="Maserati">Maserati</option>
+                    <option value="Pagani">Pagani</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="model">Model:</label>
+                <input type="text" id="model" name="model" required>
+            </div>
+            <div class="form-group">
+                <label for="year">Rok:</label>
+                <input type="number" id="year" name="year" required>
+            </div>
+            <div class="form-group">
+                <label for="price">Cena:</label>
+                <input type="number" id="price" name="price" required>
+            </div>
+            <div class="form-group">
+                <label for="image">Zdjęcie:</label>
+                <input type="file" id="image" name="image" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Opis:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div class="form-group button-group">
+                <button type="submit">Dodaj pojazd</button>
+            </div>
         </form>
         <?php
         if (!empty($errors)) {
@@ -136,8 +143,11 @@ $conn->close();
             echo '</div>';
         }
         ?>
+        <div class="center-link">
+            <a href="vehicles.php">Wróć do zarządzania pojazdami</a>
+        </div>
     </div>
-    <a href="vehicles.php">Wróć do zarządzania pojazdami</a>
+
     <div class="italian-flag"></div> 
     <footer class="footer">
         <div class="social-media">

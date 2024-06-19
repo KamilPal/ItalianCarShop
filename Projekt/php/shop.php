@@ -10,6 +10,7 @@ session_start();
     <title>Sklep</title>
     <link rel="stylesheet" href="../css/general.css">
     <link rel="stylesheet" href="../css/shop.css">
+    <link rel="stylesheet" href="../css/button.css">
 </head>
 <body>
     <nav class="navbar">
@@ -40,7 +41,7 @@ session_start();
     <div class="italian-flag"></div> 
     <h2 style="text-align: center;">Wybierz producenta:</h2>
     <div style="text-align: center; margin-bottom: 5px;">
-        <button onclick="window.location.href='all_cars.php'" style="color: white; background-color:#1f1f1f; padding: 10px 20px;">Wyświetl wszystkie pojazdy</button>
+        <button onclick="window.location.href='all_cars.php'" style="background-color:#1f1f1f;">Wyświetl wszystkie pojazdy</button>
     </div>
     <div class="container">
         <div id="abarth" class="tile" style="--tile-color: #d81517;">

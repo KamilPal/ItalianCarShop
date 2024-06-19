@@ -13,46 +13,79 @@ $errors = [];
 $user = ['name' => '', 'surname' => '', 'email' => ''];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['name'];
-    $surname = $_POST['surname'];
-    $email = $_POST['email'];
-    $password = $_POST['password'] ? password_hash($_POST['password'], PASSWORD_BCRYPT) : null;
-
-    // Walidacja po stronie serwera
-    if (!preg_match("/^[a-zA-Z]{3,}$/", $username)) {
-        $errors[] = "Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
-    }
-
-    if (!preg_match("/^[a-zA-Z]{3,}$/", $surname)) {
-        $errors[] = "Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Email powinien być w prawidłowym formacie.";
-    }
-
-    if (empty($errors)) {
-        $sql = "UPDATE users SET name = ?, surname = ?, email = ?";
-        $params = [$username, $surname, $email];
-
-        if ($password) {
-            $sql .= ", password = ?";
-            $params[] = $password;
-        }
-
-        $sql .= " WHERE id = ?";
-        $params[] = $user_id;
-
+    if (isset($_POST['delete_account'])) {
+        // Usuń powiązane rekordy w tabeli orders
+        $sql = "DELETE FROM orders WHERE user_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssi", ...$params);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+
+        // Usuń profil użytkownika
+        $sql = "DELETE FROM users WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
 
         if ($stmt->execute()) {
-            $message = "Profil zaktualizowany pomyślnie.";
+            session_destroy();
+            header("Location: register.php");
+            exit();
         } else {
-            $message = "Błąd podczas aktualizacji profilu.";
+            $message = "Błąd podczas usuwania profilu.";
         }
     } else {
-        $user = ['name' => $username, 'surname' => $surname, 'email' => $email];
+        // Aktualizacja profilu użytkownika
+        $username = $_POST['name'];
+        $surname = $_POST['surname'];
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
+
+        // Walidacja po stronie serwera
+        if (!preg_match("/^[a-zA-Z]{3,}$/", $username)) {
+            $errors[] = "Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
+        }
+
+        if (!preg_match("/^[a-zA-Z]{3,}$/", $surname)) {
+            $errors[] = "Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Email powinien być w prawidłowym formacie.";
+        }
+
+        if ($password && $password !== $confirm_password) {
+            $errors[] = "Hasła nie są identyczne.";
+        }
+
+        if (empty($errors)) {
+            $sql = "UPDATE users SET name = ?, surname = ?, email = ?";
+            $params = [$username, $surname, $email];
+            $types = "sss";  // String, string, string
+
+            if ($password) {
+                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                $sql .= ", password = ?";
+                $params[] = $hashed_password;
+                $types .= "s";  // Dodaj typ string dla hasła
+            }
+
+            $sql .= " WHERE id = ?";
+            $params[] = $user_id;
+            $types .= "i";  // Dodaj typ integer dla id
+
+            $stmt = $conn->prepare($sql);
+
+            // Dynamiczne dopasowanie parametrów
+            $stmt->bind_param($types, ...$params);
+
+            if ($stmt->execute()) {
+                $message = "Profil zaktualizowany pomyślnie.";
+            } else {
+                $message = "Błąd podczas aktualizacji profilu.";
+            }
+        } else {
+            $user = ['name' => $username, 'surname' => $surname, 'email' => $email];
+        }
     }
 }
 
@@ -74,8 +107,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edytuj Profil</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
 <nav class="navbar">
@@ -100,7 +132,7 @@ $conn->close();
             </div>
         </div>
         <a href="shop.php">Sklep</a>
-        <a href="home.php">Strona główna</a>
+        <a href="profile.php">Powrót do Profilu</a>
     </div>
 </nav>
 <div class="italian-flag"></div> 
@@ -110,21 +142,34 @@ $conn->close();
         <p><?php echo $message; ?></p>
     <?php endif; ?>
     <form action="edit_profile.php" method="post" onsubmit="return validateForm()">
+    <div class="form-group">
         <label for="name">Imie:</label>
         <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required><br>
-
+        </div>
+        <div class="form-group">
         <label for="surname">Nazwisko:</label>
         <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($user['surname']); ?>" required><br>
-
+        </div>
+        <div class="form-group">
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required><br>
-
+        </div>
+        <div class="form-group">
         <label for="password">Nowe hasło (opcjonalnie):</label>
         <input type="password" id="password" name="password"><br>
-
-        <button type="submit">Zapisz zmiany</button>
+        </div>
+        <div class="form-group">
+        <label for="confirm_password">Powtórz nowe hasło (opcjonalnie):</label>
+        <input type="password" id="confirm_password" name="confirm_password"><br>
+        </div>
+        <div class="form-group">
+        <button type="submit" name="update_profile">Zapisz zmiany</button>
+        <button type="submit" name="delete_account" onclick="return confirm('Czy na pewno chcesz usunąć swoje konto?');">Usuń profil</button>
     </form>
+</div>
+<div class="center-link">
     <a href="profile.php">Powrót do profilu</a>
+    </div>
 </div>
 <div class="italian-flag"></div> 
 <footer class="footer">
@@ -141,6 +186,18 @@ $conn->close();
     var errors = <?php echo json_encode($errors); ?>;
     if (errors.length > 0) {
         alert(errors.join("\n"));
+    }
+
+    function validateForm() {
+        var password = document.getElementById("password").value;
+        var confirmPassword = document.getElementById("confirm_password").value;
+
+        if (password && password !== confirmPassword) {
+            alert("Hasła nie są identyczne.");
+            return false;
+        }
+
+        return true;
     }
 </script>
 </body>

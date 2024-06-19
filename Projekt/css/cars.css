@@ -9,7 +9,7 @@
 .vehicles {
     display: flex;
     flex-wrap: wrap;
-    gap: 17px;
+    gap: 15px;
 }
 
 .vehicle {
