@@ -17,68 +17,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $year = $_POST['year'];
     $price = $_POST['price'];
     $description = $_POST['description'];
+    $image = $_POST['image'];
 
-    // Validate year
-    if (!is_numeric($year) || $year < 1886 || $year > intval(date("Y"))) { // Added realistic range for car manufacturing years
+    // Walidacja daty
+    if (!is_numeric($year) || $year < 1886 || $year > intval(date("Y"))) { 
         $errors[] = "Rok musi być liczbą z przedziału od 1886 do obecnego roku.";
     }
 
-    // Validate price
+    // Walidacja ceny
     if (!preg_match('/^\d+(\.\d{1,2})?$/', $price)) {
         $errors[] = "Cena musi być liczbą z maksymalnie dwoma miejscami po przecinku.";
     }
 
-    // Validate brand
+    // Walidacja marki
     $valid_brands = ['Abarth', 'Alfa Romeo', 'Ferrari', 'Fiat', 'Lamborghini', 'Lancia', 'Maserati', 'Pagani'];
     if (!in_array($brand, $valid_brands)) {
         $errors[] = "Wybrana marka nie jest prawidłowa.";
     }
 
-    // If a new image has been uploaded, update the image path
-    if (!empty($_FILES['image']['name'])) {
-        $image = $_FILES['image']['name'];
-        $target = "../images/" . basename($image);
-
-        if (strpos($target, '../images/') !== 0) {
-            $errors[] = "Nieprawidłowa ścieżka do przesyłanego pliku.";
-        }
-
-        if (empty($errors)) {
-            // Get the old image path
-            $old_image_path_query = "SELECT image FROM vehicles WHERE id=?";
-            $old_stmt = $conn->prepare($old_image_path_query);
-            $old_stmt->bind_param("i", $vehicle_id);
-            $old_stmt->execute();
-            $old_stmt->bind_result($old_image_path);
-            $old_stmt->fetch();
-            $old_stmt->close();
-
-            // Delete the old image if it exists
-            if (file_exists($old_image_path)) {
-                unlink($old_image_path);
-            }
-
-            // Move the new file
-            if (!move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
-                $errors[] = "Nie udało się przesłać zdjęcia.";
-            }
-        }
-    }
-
     if (empty($errors)) {
-        // Update vehicle data in the database
-        $update_sql = "UPDATE vehicles SET brand=?, model=?, year=?, price=?, description=?";
-        if (!empty($_FILES['image']['name'])) {
-            $update_sql .= ", image=?";
-        }
-        $update_sql .= " WHERE id=?";
+        // Aktualizacja pojazdu
+        $update_sql = "UPDATE vehicles SET brand=?, model=?, year=?, price=?, description=?, image=? WHERE id=?";
         $update_stmt = $conn->prepare($update_sql);
-
-        if (!empty($_FILES['image']['name'])) {
-            $update_stmt->bind_param("ssisssi", $brand, $model, $year, $price, $description, $target, $vehicle_id);
-        } else {
-            $update_stmt->bind_param("ssissi", $brand, $model, $year, $price, $description, $vehicle_id);
-        }
+        $update_stmt->bind_param("ssisssi", $brand, $model, $year, $price, $description, $image, $vehicle_id);
 
         if ($update_stmt->execute()) {
             header("Location: vehicles.php");
@@ -90,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Get vehicle data for editing
+// Pobranie danych pojazdu do edycji
 if (isset($_GET['id'])) {
     $vehicle_id = $_GET['id'];
     $select_sql = "SELECT * FROM vehicles WHERE id=?";
@@ -102,6 +63,9 @@ if (isset($_GET['id'])) {
     $select_stmt->close();
 }
 
+$images_dir = realpath(dirname(__FILE__) . '/../images') . '/';
+$images = array_diff(scandir($images_dir), array('.', '..'));
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -109,6 +73,54 @@ $conn->close();
 <head>
     <title>Edycja pojazdu</title>
     <link rel="stylesheet" href="../css/uh.css">
+    <style>
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .image-container img {
+            max-width: 100px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 <nav class="navbar">
@@ -140,44 +152,48 @@ $conn->close();
     <div class="italian-flag"></div> 
     <h2>Edytujesz pojazd</h2>
     <div class="container">
-        <form action="edit_vehicle.php" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <form action="edit_vehicle.php" method="post" onsubmit="return validateForm()">
             <input type="hidden" name="vehicle_id" value="<?php echo htmlspecialchars($vehicle['id']); ?>">
             <div class="form-group">
-            <label for="brand">Marka:</label>
-            <select id="brand" name="brand" required>
-                <option value="">Wybierz markę</option>
-                <option value="Abarth" <?php if ($vehicle['brand'] === 'Abarth') echo 'selected'; ?>>Abarth</option>
-                <option value="Alfa Romeo" <?php if ($vehicle['brand'] === 'Alfa Romeo') echo 'selected'; ?>>Alfa Romeo</option>
-                <option value="Ferrari" <?php if ($vehicle['brand'] === 'Ferrari') echo 'selected'; ?>>Ferrari</option>
-                <option value="Fiat" <?php if ($vehicle['brand'] === 'Fiat') echo 'selected'; ?>>Fiat</option>
-                <option value="Lamborghini" <?php if ($vehicle['brand'] === 'Lamborghini') echo 'selected'; ?>>Lamborghini</option>
-                <option value="Lancia" <?php if ($vehicle['brand'] === 'Lancia') echo 'selected'; ?>>Lancia</option>
-                <option value="Maserati" <?php if ($vehicle['brand'] === 'Maserati') echo 'selected'; ?>>Maserati</option>
-                <option value="Pagani" <?php if ($vehicle['brand'] === 'Pagani') echo 'selected'; ?>>Pagani</option>
-            </select>
+                <label for="brand">Marka:</label>
+                <select id="brand" name="brand" required>
+                    <option value="">Wybierz markę</option>
+                    <option value="Abarth" <?php if ($vehicle['brand'] === 'Abarth') echo 'selected'; ?>>Abarth</option>
+                    <option value="Alfa Romeo" <?php if ($vehicle['brand'] === 'Alfa Romeo') echo 'selected'; ?>>Alfa Romeo</option>
+                    <option value="Ferrari" <?php if ($vehicle['brand'] === 'Ferrari') echo 'selected'; ?>>Ferrari</option>
+                    <option value="Fiat" <?php if ($vehicle['brand'] === 'Fiat') echo 'selected'; ?>>Fiat</option>
+                    <option value="Lamborghini" <?php if ($vehicle['brand'] === 'Lamborghini') echo 'selected'; ?>>Lamborghini</option>
+                    <option value="Lancia" <?php if ($vehicle['brand'] === 'Lancia') echo 'selected'; ?>>Lancia</option>
+                    <option value="Maserati" <?php if ($vehicle['brand'] === 'Maserati') echo 'selected'; ?>>Maserati</option>
+                    <option value="Pagani" <?php if ($vehicle['brand'] === 'Pagani') echo 'selected'; ?>>Pagani</option>
+                </select>
             </div>
             <div class="form-group">
-            <label for="model">Model:</label>
-            <input type="text" id="model" name="model" value="<?php echo htmlspecialchars($vehicle['model']); ?>" required>
+                <label for="model">Model:</label>
+                <input type="text" id="model" name="model" value="<?php echo htmlspecialchars($vehicle['model']); ?>" required>
             </div>
             <div class="form-group">
-            <label for="year">Rok:</label>
-            <input type="number" id="year" name="year" value="<?php echo htmlspecialchars($vehicle['year']); ?>" required>
+                <label for="year">Rok:</label>
+                <input type="number" id="year" name="year" value="<?php echo htmlspecialchars($vehicle['year']); ?>" required>
             </div>
             <div class="form-group">
-            <label for="price">Cena:</label>
-            <input type="number" step="0.01" id="price" name="price" value="<?php echo htmlspecialchars($vehicle['price']); ?>" required>
+                <label for="price">Cena:</label>
+                <input type="number" step="0.01" id="price" name="price" value="<?php echo htmlspecialchars($vehicle['price']); ?>" required>
             </div>
             <div class="form-group">
-            <label for="image">Zdjęcie:</label>
-            <input type="file" id="image" name="image">
+                <label for="image">Zdjęcie:</label>
+                <input type="hidden" id="image" name="image" value="<?php echo htmlspecialchars($vehicle['image']); ?>" required>
+                <button type="button" onclick="openModal()">Wybierz zdjęcie</button>
+                <div id="selected-image">
+                    <img src="../<?php echo htmlspecialchars($vehicle['image']); ?>" alt="Selected Image" style="max-width: 100px;">
+                </div>
             </div>
             <div class="form-group">
-            <label for="description">Opis:</label>
-            <textarea id="description" name="description" required><?php echo htmlspecialchars($vehicle['description']); ?></textarea>
+                <label for="description">Opis:</label>
+                <textarea id="description" name="description" required><?php echo htmlspecialchars($vehicle['description']); ?></textarea>
             </div>
             <div class="form-group">
-            <button type="submit">Zapisz zmiany</button>
+                <button type="submit">Zapisz zmiany</button>
             </div>
         </form>
         <?php
@@ -189,9 +205,9 @@ $conn->close();
             echo '</div>';
         }
         ?>
-            <div class="center-link">
+        <div class="center-link">
             <p><a href="vehicles.php">Powrót do zarządzania pojazdami</a></p>
-            </div>
+        </div>
     </div>
     <div class="italian-flag"></div> 
     <footer class="footer">
@@ -201,10 +217,37 @@ $conn->close();
             <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
         </div>
     </footer>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="image-container">
+                <?php foreach ($images as $img): ?>
+                    <img src="../images/<?php echo htmlspecialchars($img); ?>" alt="<?php echo htmlspecialchars($img); ?>" onclick="selectImage('<?php echo htmlspecialchars($img); ?>')">
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@latest/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@latest/dist/ionicons/ionicons.js"></script>
     <script src="../Js/menu.js"></script>
     <script>
+        function openModal() {
+            document.getElementById("myModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("myModal").style.display = "none";
+        }
+
+        function selectImage(image) {
+            document.getElementById("image").value = "images/" + image;
+            document.getElementById("selected-image").innerHTML = '<img src="../images/' + image + '" alt="Selected Image" style="max-width: 100px;">';
+            closeModal();
+        }
+
         function validateForm() {
             const year = document.getElementById('year').value;
             const price = document.getElementById('price').value;

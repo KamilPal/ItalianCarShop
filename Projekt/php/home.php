@@ -2,7 +2,7 @@
 session_start();
 require 'config.php'; 
 
-// Pobierz losowe pojazdy z bazy danych
+// Pobranie losowego pojazdu z bazy danych
 $query = "SELECT image FROM vehicles ORDER BY RAND() LIMIT 1"; 
 $result = $conn->query($query);
 $vehicle = $result->fetch_assoc();
@@ -22,12 +22,11 @@ $vehicle = $result->fetch_assoc();
             width: 100%;
             height: 300px;
             overflow: hidden;
-            margin-top: 20px;
         }
         .random-banner img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit:cover;
         }
         .random-banner .overlay {
             position: absolute;

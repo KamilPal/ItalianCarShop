@@ -3,29 +3,29 @@ session_start();
 include('config.php');
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+    header("Location: login.php");  
+    exit(); 
 }
 
-$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];  // Przypisanie zawartości koszyka z sesji do zmiennej $cart, jeśli istnieje
 
-$vehicles = [];
+$vehicles = [];  // Inicjalizacja pustej tablicy na przechowywanie pojazdów z koszyka
 if (!empty($cart)) {
-    $ids = implode(',', array_map('intval', $cart));
-    $sql = "SELECT id, brand, model, year, price, image, description FROM vehicles WHERE id IN ($ids)";
-    $result = $conn->query($sql);
+    $ids = implode(',', array_map('intval', $cart));  // Przygotowanie listy ID pojazdów jako ciągu liczb całkowitych
+    $sql = "SELECT id, brand, model, year, price, image, description FROM vehicles WHERE id IN ($ids)";  // Zapytanie SQL wybierające pojazdy z bazy danych na podstawie ID
+    $result = $conn->query($sql);  // Wykonanie zapytania SQL
     while ($row = $result->fetch_assoc()) {
-        $vehicles[] = $row;
+        $vehicles[] = $row;  // Dodanie wyników zapytania do tablicy $vehicles
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_id'])) {
-    $remove_id = intval($_POST['remove_id']);
+    $remove_id = intval($_POST['remove_id']);  // Pobranie ID pojazdu do usunięcia z formularza POST i rzutowanie na liczbę całkowitą
     if (($key = array_search($remove_id, $_SESSION['cart'])) !== false) {
-        unset($_SESSION['cart'][$key]);
+        unset($_SESSION['cart'][$key]);  // Usunięcie ID pojazdu z tablicy koszyka w sesji
     }
-    header("Location: cart.php");
-    exit();
+    header("Location: cart.php");  // Przekierowanie użytkownika z powrotem do strony koszyka
+    exit();  // Zakończenie wykonywania skryptu
 }
 ?>
 
@@ -46,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_id'])) {
             color: black;
             font-size: 20px;
         }
-
         .close-icon:hover {
             color: red;
         }

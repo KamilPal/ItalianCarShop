@@ -83,8 +83,7 @@ $conn->close();
 <html>
 <head>
     <title>Logowanie</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
 <nav class="navbar">
@@ -101,10 +100,10 @@ $conn->close();
                     <?php else: ?>
                         <a href="profile.php">Profil</a>
                     <?php endif; ?>
-                    <a href="logout.php">Wyloguj się</a>
-                <?php else: ?>
-                    <a href="login.php">Zaloguj się</a>
-                    <a href="register.php">Zarejestruj się</a>
+                        <a href="logout.php">Wyloguj się</a>
+                    <?php else: ?>
+                        <a href="login.php">Zaloguj się</a>
+                        <a href="register.php">Zarejestruj się</>
                 <?php endif; ?>
             </div>
         </div>
@@ -117,24 +116,32 @@ $conn->close();
 <div class="container">
     <?php if ($is_activation_needed): ?>
         <form action="login.php" method="post">
-            <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
-            <label for="activation_code">Kod aktywacyjny:</label>
-            <input type="text" id="activation_code" name="activation_code" required>
-            <br>
+            <div class="form-group">
+                <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
+                <label for="activation_code">Kod aktywacyjny:</label>
+                <input type="text" id="activation_code" name="activation_code" required>
+            </div>
             <button type="submit">Aktywuj Konto</button>
         </form>
     <?php else: ?>
         <form action="login.php" method="post">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
-            <br>
-            <label for="password">Hasło:</label>
-            <input type="password" id="password" name="password" required>
-            <br>
-            <button type="submit">Zaloguj</button>
+        <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Hasło:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+                <div class="form-group">
+                <button type="submit">Zaloguj</button>
+            </div>
         </form>
     <?php endif; ?>
-    <p>Nie masz konta? <a href="register.php">Zarejestruj się</a></p>
+    <div class="center-link">
+        <p>Nie masz konta? <a href="register.php">Zarejestruj się</a></p>
+    </div>
+    </div>
 </div>
 <div class="italian-flag"></div> 
 <footer class="footer">

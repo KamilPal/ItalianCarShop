@@ -113,8 +113,10 @@ $result = $conn->query($sql);
                     <td><img src="../images/<?php echo $row['image']; ?>" alt="<?php echo $row['brand'] . ' ' . $row['model']; ?>" width="100"></td>
                     <td><?php echo $row['description']; ?></td>
                     <td>
-                        <a href="edit_vehicle.php?id=<?php echo $row['id']; ?>">Edycja</a>
-                        <form action="delete_vehicle.php" method="post" style="display:inline;">
+                    <div class="form-group">
+                    <a href="edit_vehicle.php?id=<?php echo $row['id']; ?>"><button>Edycja</button></a>
+                    </div>
+                        <form action="delete_vehicle.php" method="post" style="display:inline;" onsubmit="return confirmDelete()">
                             <input type="hidden" name="vehicle_id" value="<?php echo $row['id']; ?>">
                             <button type="submit" name="delete_vehicle">Usuń</button>
                         </form>
@@ -135,6 +137,11 @@ $result = $conn->query($sql);
     <script src="../Js/menu.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@latest/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@latest/dist/ionicons/ionicons.js"></script>
+    <script>
+        function confirmDelete() {
+            return confirm('Czy na pewno chcesz usunąć ten pojazd?');
+        }
+    </script>
 </body>
 </html>
 

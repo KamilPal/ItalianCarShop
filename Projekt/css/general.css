@@ -30,6 +30,7 @@ body::-webkit-scrollbar {
     position: sticky;
     top: 0;
     z-index: 1000; /* Ensure it stays on top of other content */
+    font-weight: bold;
 }
 
 .navbar-logo {

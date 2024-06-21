@@ -116,7 +116,9 @@ $result = $conn->query($sql);
             <td><?php echo $row['is_active'] ? 'Tak' : 'Nie'; ?></td>
             <td>
             <div class="button-group">
-            <button><a href="edit_user.php?id=<?php echo $row['id']; ?>">Edytuj</a></button>
+            <?php if (!$row['admin']): ?>
+                <button><a href="edit_user.php?id=<?php echo $row['id']; ?>">Edytuj</a></button>
+            <?php endif; ?>
             </div>
             </td>
         </tr>

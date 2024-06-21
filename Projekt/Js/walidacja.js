@@ -10,17 +10,20 @@ function validateForm() {
     var payment = document.getElementById("payment").value;
     var errors = [];
 
-    if (!name.match(/^[a-zA-Z]{3,}$/)) {
-        errors.push("Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.");
+    var polishChars = /^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/;
+
+    if (!name.match(polishChars)) {
+        errors.push("Imię powinno zawierać tylko litery (w tym polskie) i mieć co najmniej 3 znaki.");
     }
 
-    if (!surname.match(/^[a-zA-Z]{3,}$/)) {
-        errors.push("Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.");
+    if (!surname.match(polishChars)) {
+        errors.push("Nazwisko powinno zawierać tylko litery (w tym polskie) i mieć co najmniej 3 znaki.");
     }
 
     if (!email.match(/^\S+@\S+\.\S+$/)) {
         errors.push("Email powinien być w prawidłowym formacie.");
     }
+
     if (country.length < 3) {
         errors.push("Kraj powinien mieć co najmniej 3 znaki.");
     }
@@ -37,8 +40,8 @@ function validateForm() {
         errors.push("Proszę wybrać metodę płatności.");
     }
 
-    if (password && password.length < 6) {
-        errors.push("Hasło powinno mieć co najmniej 6 znaków.");
+    if (password && password.length < 4) {
+        errors.push("Hasło powinno mieć co najmniej 4 znaki.");
     }
 
     if (password && password !== confirmPassword) {

@@ -15,7 +15,7 @@ if (empty($_SESSION['cart'])) {
 $user_id = $_SESSION['user_id'];
 $cart = $_SESSION['cart'];
 
-// Pobierz dane użytkownika
+// Pobieranie danych użytkownika
 $sql_user = "SELECT name, surname, email FROM users WHERE id = ?";
 $stmt_user = $conn->prepare($sql_user);
 $stmt_user->bind_param("i", $user_id);
@@ -23,7 +23,7 @@ $stmt_user->execute();
 $result_user = $stmt_user->get_result();
 $user = $result_user->fetch_assoc();
 
-// Pobierz dane pojazdów
+// Pobierane danych pojazdów
 $vehicles = [];
 $total_price = 0;
 if (!empty($cart)) {
@@ -61,7 +61,7 @@ $conn->close();
     <div class="italian-flag"></div>
     <h2 style="text-align: center;">Formularz Zakupu</h2>
     <div class="center-link">
-    <a href="cart.php">Powrót do koszyka</a>
+        <a href="cart.php">Powrót do koszyka</a>
     </div>
     <div class="container">
         <div class="purchase-form">
@@ -88,8 +88,12 @@ $conn->close();
                     <input type="text" id="city" name="city" required>
                 </div>
                 <div class="form-group">
-                    <label for="address">Adres:</label>
-                    <input type="text" id="address" name="address" required>
+                    <label for="street">Ulica:</label>
+                    <input type="text" id="street" name="street" required>
+                </div>
+                <div class="form-group">
+                    <label for="house_number">Numer domu:</label>
+                    <input type="text" id="house_number" name="house_number" required>
                 </div>
                 <div class="form-group">
                     <label for="payment">Metoda płatności:</label>
@@ -128,15 +132,18 @@ $conn->close();
             var email = document.getElementById("email").value;
             var country = document.getElementById("country").value;
             var city = document.getElementById("city").value;
-            var address = document.getElementById("address").value;
+            var street = document.getElementById("street").value;
+            var houseNumber = document.getElementById("house_number").value;
             var payment = document.getElementById("payment").value;
             var errors = [];
 
-            if (!name.match(/^[a-zA-Z]{3,}$/)) {
+            var polishChars = /^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ\s]+$/;
+
+            if (!name.match(polishChars) || name.length < 3) {
                 errors.push("Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.");
             }
 
-            if (!surname.match(/^[a-zA-Z]{3,}$/)) {
+            if (!surname.match(polishChars) || surname.length < 3) {
                 errors.push("Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.");
             }
 
@@ -144,16 +151,20 @@ $conn->close();
                 errors.push("Email powinien być w prawidłowym formacie.");
             }
 
-            if (country.length < 3) {
-                errors.push("Kraj powinien mieć co najmniej 3 znaki.");
+            if (!country.match(polishChars) || country.length < 3) {
+                errors.push("Kraj powinien mieć co najmniej 3 znaki i zawierać tylko litery.");
             }
 
-            if (city.length < 2) {
-                errors.push("Miasto powinno mieć co najmniej 2 znaki.");
+            if (!city.match(polishChars) || city.length < 2) {
+                errors.push("Miasto powinno mieć co najmniej 2 znaki i zawierać tylko litery.");
             }
 
-            if (address.length < 5) {
-                errors.push("Adres powinien mieć co najmniej 5 znaków.");
+            if (!street.match(polishChars) || street.length < 3) {
+                errors.push("Ulica powinna mieć co najmniej 3 znaki i zawierać tylko litery.");
+            }
+
+            if (!houseNumber.match(/^[0-9]+$/)) {
+                errors.push("Nr domu powinien zawierać tylko cyfry.");
             }
 
             if (!payment) {

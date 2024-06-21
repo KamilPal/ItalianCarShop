@@ -23,7 +23,7 @@ h2 {
     margin: 5px;
     border: none;
     border-radius: 5px;
-    background-color: #e74c3c; /* Kolor czerwony */
+    background-color: #e74c3c; 
     color: #ffffff;
     font-size: 16px;
     cursor: pointer;
@@ -32,7 +32,7 @@ h2 {
 }
 
 .center-link button:hover {
-    background-color: #c0392b; /* Ciemniejszy czerwony przy najechaniu */
+    background-color: #c0392b; 
 }
 
 /* Main Container */
@@ -130,7 +130,7 @@ td img {
     border-radius: 5px;
 }
 
-/* Responsive Design */
+/* Responzywność */
 @media (max-width: 768px) {
     .form-group {
         flex-direction: column;
@@ -149,7 +149,7 @@ td img {
         font-size: 14px;
     }
 }
-/* Global styles for hiding the scrollbar */
+
 body {
     display: flex;
     flex-direction: column;
@@ -159,17 +159,16 @@ body {
     color: #ffffff; 
     padding: 0;
     min-height: 100vh;
-    overflow: auto; /* Allow scrolling */
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow: auto; /* Pozwolenie na scrollowanie */
+    overflow-x: hidden; /* Zablokowanie horyzatolnego scrollowania */
 }
 
-/* Hide scrollbar for WebKit browsers */
+/* Schowanie scrollbara*/
 body::-webkit-scrollbar {
     width: 0px;
-    background: transparent; /* Optional: makes scrollbar background transparent */
+    background: transparent;
 }
 
-/* Additional styling for the rest of the elements */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -180,7 +179,8 @@ body::-webkit-scrollbar {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
-    z-index: 1000; /* Ensure it stays on top of other content */
+    z-index: 1000; /* Żeby nachodził na inny content*/
+    font-weight: bold;
 }
 
 .navbar-logo {
@@ -192,6 +192,7 @@ body::-webkit-scrollbar {
     text-decoration: none;
     margin-left: 20px;
     font-size: 16px;
+
 }
 
 .navbar-right a:hover {
@@ -205,7 +206,7 @@ body::-webkit-scrollbar {
 }
 
 .container {
-    flex: 1; /* This will take up the remaining space between navbar and footer */
+    flex: 1; /* Zajęcie miejsca między navbarem a footerem */
     padding: 20px;
 }
 

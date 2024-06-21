@@ -41,11 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $confirm_password = $_POST['confirm_password'];
 
         // Walidacja po stronie serwera
-        if (!preg_match("/^[a-zA-Z]{3,}$/", $username)) {
+        if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $username)) {
             $errors[] = "Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
         }
 
-        if (!preg_match("/^[a-zA-Z]{3,}$/", $surname)) {
+        if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $surname)) {
             $errors[] = "Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
         }
 
@@ -53,9 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors[] = "Email powinien być w prawidłowym formacie.";
         }
 
-        if ($password && $password !== $confirm_password) {
-            $errors[] = "Hasła nie są identyczne.";
+        if ($password !== $confirm_password) {
+            $errors[] = "Hasła nie są zgodne.";
         }
+    
+        if (!empty($password) && strlen($password) < 4) {
+            $errors[] = "Hasło powinno mieć co najmniej 4 znaki.";
+        }
+    
 
         if (empty($errors)) {
             $sql = "UPDATE users SET name = ?, surname = ?, email = ?";
@@ -165,6 +170,7 @@ $conn->close();
         <div class="form-group">
         <button type="submit" name="update_profile">Zapisz zmiany</button>
         <button type="submit" name="delete_account" onclick="return confirm('Czy na pewno chcesz usunąć swoje konto?');">Usuń profil</button>
+        </div>
     </form>
 </div>
 <div class="center-link">

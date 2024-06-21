@@ -13,8 +13,7 @@ require 'config.php';
 <html>
 <head>
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
     <nav class="navbar">
@@ -47,12 +46,20 @@ require 'config.php';
     <div class="container">
         <div class="button-group">
             <div class="horizontal">
+            <div class="form-group">
                 <a href='manage_users.php'class="button">Zarządzaj użytkownikami</a>
+            </div>
+            <div class="form-group">
                 <a href='vehicles.php' class="button">Zarządzaj pojadami</a>
+            </div>
+            <div class="form-group">
                 <a href='home.php' class="button">Strona główna</a>
+            </div>    
+            <div class="form-group">
                 <a href='logout.php' class="button">Wyloguj</a>
             </div>
         </div>
+    </div>
     </div>
     <div class="italian-flag"></div> 
     <footer class="footer">

@@ -8,8 +8,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-
-$sql = "SELECT orders.id, vehicles.brand, vehicles.model, orders.purchase_date, orders.name, orders.surname, orders.email, orders.country, orders.city, orders.address, orders.payment 
+//Pobranie danych do wyświetlenia
+$sql = "SELECT orders.id, vehicles.brand, vehicles.model, orders.purchase_date, orders.name, orders.surname, orders.email, orders.country, orders.city, orders.street, orders.house_number, orders.payment 
         FROM orders 
         JOIN vehicles ON orders.vehicle_id = vehicles.id 
         WHERE orders.user_id = ?";
@@ -68,7 +68,8 @@ $result = $stmt->get_result();
             <th>Email</th>
             <th>Kraj</th>
             <th>Miasto</th>
-            <th>Adres</th>
+            <th>Ulica</th>
+            <th>Nr domu</th>
             <th>Płatność</th>
         </tr>
         <?php
@@ -83,12 +84,13 @@ $result = $stmt->get_result();
                 echo "<td>" . htmlspecialchars($row['email']) . "</td>";
                 echo "<td>" . htmlspecialchars($row['country']) . "</td>";
                 echo "<td>" . htmlspecialchars($row['city']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['address']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['street']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['house_number']) . "</td>";
                 echo "<td>" . htmlspecialchars($row['payment']) . "</td>";
                 echo "</tr>";
             }
         } else {
-            echo "<tr><td colspan='10'>Brak zamówień</td></tr>";
+            echo "<tr><td colspan='11'>Brak zamówień</td></tr>";
         }
         ?>
     </table>

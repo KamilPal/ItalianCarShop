@@ -10,9 +10,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
-    $activation_code = bin2hex(random_bytes(16)); // Generate a random activation code
+    $activation_code = bin2hex(random_bytes(16)); // Generowanie randomowego kodu do aktywacji
 
-    // Check if email already exists
+    // Sprawdzenie czy emial istnieje
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -21,12 +21,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt->num_rows > 0) {
         $errors[] = "Email jest już zajęty.";
     } else {
-        // Validate form inputs
-        if (!preg_match("/^[a-zA-Z]{3,}$/", $name)) {
+        // Walidacja inputów
+        if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $name)) {
             $errors[] = "Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
         }
 
-        if (!preg_match("/^[a-zA-Z]{3,}$/", $surname)) {
+        if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $surname)) {
             $errors[] = "Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
         }
 
@@ -34,8 +34,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $errors[] = "Email powinien być w prawidłowym formacie.";
         }
 
-        if (strlen($password) < 6) {
-            $errors[] = "Hasło powinno mieć co najmniej 6 znaków.";
+        if (strlen($password) < 4) {
+            $errors[] = "Hasło powinno mieć co najmniej 4 znaki.";
         }
 
         if ($password !== $confirm_password) {
@@ -50,11 +50,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("sssss", $name, $surname, $email, $hashed_password, $activation_code);
 
             if ($stmt->execute()) {
-                // Send activation email
+                // Wysłanie maila z kodem aktywacyjnym (działa na localhoscie)
                 $subject = "Aktywacja konta";
                 $message = "Witaj $name,\n\nDziękujemy za rejestrację. Kliknij poniższy link, aby aktywować swoje konto:\n\n";
                 $message .= "Poniższego kodu musisz użyć do aktywacji:\n\nKod aktywacyjny: $activation_code\n\n";
-                $headers = "From: noreply@yourdomain.com";
+                $headers = "From: ItalianCarsShop";
 
                 if (mail($email, $subject, $message, $headers)) {
                     header("Location: login.php?registered=true");
@@ -79,8 +79,7 @@ $conn->close();
 <html>
 <head>
     <title>Rejestracja użytkownika</title>
-    <link rel="stylesheet" href="../css/general.css">
-    <link rel="stylesheet" href="../css/miscellaneous.css">
+    <link rel="stylesheet" href="../css/uh.css">
 </head>
 <body>
 <nav class="navbar">
@@ -119,25 +118,43 @@ $conn->close();
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-        <label for="name">Imię:</label>
-        <input type="text" id="name" name="name" value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>" required>
-        <br>
-        <label for="surname">Nazwisko:</label>
-        <input type="text" id="surname" name="surname" value="<?php echo isset($surname) ? htmlspecialchars($surname) : ''; ?>" required>
-        <br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
-        <br>
-        <label for="password">Hasło:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <label for="confirm_password">Powtórz hasło:</label>
-        <input type="password" id="confirm_password" name="confirm_password" required>
-        <br>
-        <button type="submit">Zarejestruj</button>
+        <div class="form-group">
+            <label for="name">Imię:</label>
+            <input type="text" id="name" name="name" value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="surname">Nazwisko:</label>
+            <input type="text" id="surname" name="surname" value="<?php echo isset($surname) ? htmlspecialchars($surname) : ''; ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Hasło:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Powtórz hasło:</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+        </div>
+        <div class="form-group">
+            <button type="submit">Zarejestruj</button>
+        </div>
     </form>
+    <div class="center-link">
+        <p>Masz już konto? <a href="login.php">Zaloguj się</a></p>
+    </div>
+    </div>
 </div>
-<p>Masz już konto? <a href="login.php">Zaloguj się</a></p>
+<div class="italian-flag"></div> 
+<footer class="footer">
+    <div class="social-media">
+        <a href="#"><ion-icon name="logo-facebook"></ion-icon></a>
+        <a href="#"><ion-icon name="logo-twitter"></ion-icon></a>
+        <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
+    </div>
+</footer>
 
 <script src="walidacja.js"></script>
 <script>

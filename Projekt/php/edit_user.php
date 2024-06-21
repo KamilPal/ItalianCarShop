@@ -6,13 +6,13 @@ require 'config.php';
 $errors = [];
 $user = ['id' => '', 'name' => '', 'surname' => '', 'email' => '', 'admin' => 0, 'is_active' => 1];
 
-// Check if the user is logged in
+// Sprawdzanie czy user jest zalogowany
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Check if the user is admin or editing their own profile
+// Sprawdzenie kto zmienia swoje konto
 $isAdmin = $_SESSION['admin'];
 $currentUserId = $_SESSION['user_id'];
 $editingUserId = isset($_GET['id']) ? $_GET['id'] : $currentUserId;
@@ -22,7 +22,7 @@ if (!$isAdmin && $editingUserId != $currentUserId) {
     exit();
 }
 
-// Fetch user data for editing
+// Pobranie danych do edycji
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($editingUserId)) {
     $stmt = $conn->prepare("SELECT id, name, surname, email, admin, is_active FROM users WHERE id = ?");
     $stmt->bind_param("i", $editingUserId);
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($editingUserId)) {
     $stmt->close();
 }
 
-// Handle form submission for updating user data
+// Obsługa przesyłania formularzy w celu aktualizacji danych użytkownika
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
     $user_id = $_POST['user_id'];
     $name = $_POST['name'];
@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
     $email = $_POST['email'];
     $is_active = isset($_POST['is_active']) ? 1 : 0;
 
-    // Admin can only change their own admin status if they are editing another user
+    // Admin może zmienić status admina tylko innym
     if ($isAdmin && $currentUserId != $user_id) {
         $admin = isset($_POST['admin']) ? 1 : 0;
     } else {
@@ -56,12 +56,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // Server-side validation
-    if (!preg_match("/^[a-zA-Z]{3,}$/", $name)) {
+    // Walidacja po stronie serwera
+    if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $name)) {
         $errors[] = "Imię powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
     }
 
-    if (!preg_match("/^[a-zA-Z]{3,}$/", $surname)) {
+    if (!preg_match("/^[a-zA-ZąęćńłóśżźĄĘĆŃŁÓŚŻŹ]{3,}$/u", $surname)) {
         $errors[] = "Nazwisko powinno zawierać tylko litery i mieć co najmniej 3 znaki.";
     }
 
@@ -73,8 +73,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
         $errors[] = "Hasła nie są zgodne.";
     }
 
-    if (!empty($password) && strlen($password) < 6) {
-        $errors[] = "Hasło powinno mieć co najmniej 6 znaków.";
+    if (!empty($password) && strlen($password) < 4) {
+        $errors[] = "Hasło powinno mieć co najmniej 4 znaki.";
     }
 
     if (empty($errors)) {
@@ -99,34 +99,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['user_id'])) {
     }
 }
 
-// Handle form submission for deleting user
+// Obsługa przesyłania formularzy w celu usunięcia użytkowników
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_user_id'])) {
     $delete_user_id = $_POST['delete_user_id'];
 
     if ($isAdmin && $delete_user_id != $currentUserId) {
-        // Start transaction
+        // Start transakcji
         $conn->begin_transaction();
 
         try {
-            // Delete related orders
+            // Usuwanie połaczonych zamówień
             $stmt = $conn->prepare("DELETE FROM orders WHERE user_id = ?");
             $stmt->bind_param("i", $delete_user_id);
             $stmt->execute();
             $stmt->close();
 
-            // Delete user
+            // Usunięcie użykownika
             $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
             $stmt->bind_param("i", $delete_user_id);
             $stmt->execute();
             $stmt->close();
 
-            // Commit transaction
             $conn->commit();
 
             header("Location: manage_users.php");
             exit();
         } catch (Exception $e) {
-            // Rollback transaction
+            // Wycofywanie transakcji
             $conn->rollback();
             $errors[] = "Błąd: " . $e->getMessage();
         }
@@ -197,21 +196,21 @@ $conn->close();
         <?php if ($isAdmin && $currentUserId != $user['id']) : ?>
             <label for="is_active">Aktywne:</label>
             <input type="checkbox" id="is_active" name="is_active" <?php echo $user['is_active'] ? 'checked' : ''; ?>><br>
-            <?php endif; ?>
-            <button type="submit">Zaktualizuj użytkownika</button>
-            <?php if ($isAdmin && $currentUserId != $user['id']) : ?>
-    <form action="edit_user.php" method="post">
-        <input type="hidden" name="delete_user_id" value="<?php echo $user['id']; ?>">
-        <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">Usuń użytkownika</button>
+        <?php endif; ?>
+        <button type="submit">Zaktualizuj użytkownika</button>
     </form>
-<?php endif; ?>
-</form>
 
-</div>
-</div>
-<div class="center-link">
-            <p><a href="manage_users.php">Powrót do zarządzania użykownikami</a></p>
-</div>
+    <?php if ($isAdmin && $currentUserId != $user['id']) : ?>
+        <form action="edit_user.php" method="post">
+            <input type="hidden" name="delete_user_id" value="<?php echo $user['id']; ?>">
+            <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">Usuń użytkownika</button>
+        </form>
+    <?php endif; ?>
+    </div>
+    </div>
+    <div class="center-link">
+        <p><a href="manage_users.php">Powrót do zarządzania użytkownikami</a></p>
+    </div>
 </div>
 <div class="italian-flag"></div> 
 <footer class="footer">
@@ -233,3 +232,4 @@ $conn->close();
 </script>
 </body>
 </html>
+

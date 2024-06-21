@@ -1,4 +1,5 @@
 <?php
+//Php dodawania poajzdów do koszyka
 session_start();
 
 if (!isset($_SESSION['user_id'])) {

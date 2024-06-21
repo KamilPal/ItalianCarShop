@@ -10,50 +10,54 @@ require 'config.php';
 
 $errors = [];
 
+// Pobieranie listy obrazów z folderu images
+$images_dir = realpath(dirname(__FILE__) . '/../images') . '/';
+$images = array_diff(scandir($images_dir), array('.', '..'));
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $brand = $_POST['brand'];
     $model = $_POST['model'];
     $year = $_POST['year'];
     $price = $_POST['price'];
     $description = $_POST['description'];
-    $image = $_FILES['image']['name'];
+    $image = $_POST['image'];
 
-    // Validate year and price
-    if (!is_numeric($year) || !is_numeric($price)) {
-        $errors[] = "Rok i cena muszą być liczbami.";
+    // Walidacja daty
+    if (!is_numeric($year) || $year < 1886 || $year > intval(date("Y"))) { // Dodanie minimalnej daty, ponieważ wtedy zaczęto produkować pojazdy
+        $errors[] = "Rok musi być liczbą z przedziału od 1886 do obecnego roku.";
     }
 
-    // Validate brand
+    // Walidacja ceny
+    if (!preg_match('/^\d+(\.\d{1,2})?$/', $price)) {
+        $errors[] = "Cena musi być liczbą z maksymalnie dwoma miejscami po przecinku.";
+    }
+
+    // Sprawdzanie marki
     $valid_brands = ['Abarth', 'Alfa Romeo', 'Ferrari', 'Fiat', 'Lamborghini', 'Lancia', 'Maserati', 'Pagani'];
     if (!in_array($brand, $valid_brands)) {
         $errors[] = "Wybrana marka nie jest prawidłowa.";
     }
 
-    // Validate image path
-    $target = "../images/" . basename($image);
-    if (strpos($target, '../images/') !== 0) {
-        $errors[] = "Nieprawidłowa ścieżka do przesyłanego pliku.";
+    // Sprawdzenie, czy wybrany plik istnieje w katalogu images
+    if (!in_array($image, $images)) {
+        $errors[] = "Wybrany obraz nie jest prawidłowy.";
     }
 
     if (empty($errors)) {
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
-            // Build SQL query
-            $sql = "INSERT INTO vehicles (brand, model, year, price, image, description) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $conn->prepare($sql);
+        //Dodanie do bazy danych
+        $sql = "INSERT INTO vehicles (brand, model, year, price, image, description) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
 
-            // Bind parameters
-            $stmt->bind_param("ssisss", $brand, $model, $year, $price, $target, $description);
+        // Połączenie parametrów
+        $stmt->bind_param("ssisss", $brand, $model, $year, $price, $image, $description);
 
-            if ($stmt->execute()) {
-                header("Location: vehicles.php");
-            } else {
-                $errors[] = "Error: " . $stmt->error;
-            }
-
-            $stmt->close();
+        if ($stmt->execute()) {
+            header("Location: vehicles.php");
         } else {
-            $errors[] = "Failed to upload image.";
+            $errors[] = "Error: " . $stmt->error;
         }
+
+        $stmt->close();
     }
 }
 
@@ -65,6 +69,54 @@ $conn->close();
 <head>
     <title>Wprowadzanie nowego pojazdu</title>
     <link rel="stylesheet" href="../css/uh.css">
+    <style>
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .image-container img {
+            max-width: 100px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -95,7 +147,7 @@ $conn->close();
     <div class="italian-flag"></div>
     <h2>Wprowadzasz nowy pojazd</h2>
     <div class="container">
-        <form action="add_vehicle.php" method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <form action="add_vehicle.php" method="post" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="brand">Marka:</label>
                 <select id="brand" name="brand" required>
@@ -120,11 +172,13 @@ $conn->close();
             </div>
             <div class="form-group">
                 <label for="price">Cena:</label>
-                <input type="number" id="price" name="price" required>
+                <input type="number" step="0.01" id="price" name="price" required>
             </div>
             <div class="form-group">
                 <label for="image">Zdjęcie:</label>
-                <input type="file" id="image" name="image" required>
+                <input type="hidden" id="image" name="image" required>
+                <button type="button" onclick="openModal()">Wybierz zdjęcie</button>
+                <div id="selected-image"></div>
             </div>
             <div class="form-group">
                 <label for="description">Opis:</label>
@@ -161,26 +215,67 @@ $conn->close();
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@latest/dist/ionicons/ionicons.js"></script>
     <script>
         function validateForm() {
-            var year = document.getElementById("year").value;
-            var price = document.getElementById("price").value;
-            var image = document.getElementById("image").value;
-            var errors = [];
+            const year = document.getElementById('year').value;
+            const price = document.getElementById('price').value;
+            const brand = document.getElementById('brand').value;
+            const image = document.getElementById('image').value;
+            const validBrands = ["Abarth", "Alfa Romeo", "Ferrari", "Fiat", "Lamborghini", "Lancia", "Maserati", "Pagani"];
 
-            if (isNaN(year) || isNaN(price)) {
-                errors.push("Rok i cena muszą być liczbami.");
+            if (!/^\d+$/.test(year) || year < 1886 || year > new Date().getFullYear()) {
+                alert("Rok musi być liczbą z przedziału od 1886 do obecnego roku.");
+                return false;
             }
 
-            if (!image.startsWith('../images/')) {
-                errors.push("Zdjęcie musi znajdować się w katalogu ../images/");
+            if (!/^\d+(\.\d{1,2})?$/.test(price)) {
+                alert("Cena musi być liczbą z maksymalnie dwoma miejscami po przecinku.");
+                return false;
             }
 
-            if (errors.length > 0) {
-                alert(errors.join("\n"));
+            if (!validBrands.includes(brand)) {
+                alert("Wybrana marka nie jest prawidłowa.");
+                return false;
+            }
+
+            if (image === "") {
+                alert("Musisz wybrać zdjęcie.");
                 return false;
             }
 
             return true;
         }
+
+        // Modalna funkcjonalność wyboru obrazu
+        function openModal() {
+            document.getElementById('myModal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = "none";
+        }
+
+        function selectImage(image) {
+            document.getElementById('image').value = image;
+            document.getElementById('selected-image').innerHTML = `<img src="../images/${image}" alt="${image}" style="max-width: 100px;">`;
+            closeModal();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('myModal')) {
+                closeModal();
+            }
+        }
     </script>
+
+    <!-- Modal do wyboru obrazu -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="image-container">
+                <?php foreach ($images as $img): ?>
+                    <img src="../images/<?php echo htmlspecialchars($img); ?>" alt="<?php echo htmlspecialchars($img); ?>" onclick="selectImage('<?php echo htmlspecialchars($img); ?>')">
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

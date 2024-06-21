@@ -35,8 +35,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors[] = "Email powinien być w prawidłowym formacie.";
     }
 
-    if (strlen($password) < 6) {
-        $errors[] = "Hasło powinno mieć co najmniej 6 znaków.";
+    if (strlen($password) < 4) {
+        $errors[] = "Hasło powinno mieć co najmniej 4 znaków.";
     }
 
     if ($password !== $confirm_password) {
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (empty($errors)) {
-        // Check if email already exists
+        // Sprawdzenie czy email już istnieje
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();

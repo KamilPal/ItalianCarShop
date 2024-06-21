@@ -2,14 +2,14 @@
 session_start();
 include('config.php');
 
-// Pobierz dane z formularza wyszukiwania, jeśli zostały przesłane
+// Pobranie danych z formularza wyszukiwania, jeśli zostały przesłane
 $brand = isset($_GET['brand']) ? $_GET['brand'] : '';
 $model = isset($_GET['model']) ? $_GET['model'] : '';
 $year = isset($_GET['year']) ? $_GET['year'] : '';
 $price_from = isset($_GET['price_from']) ? $_GET['price_from'] : '';
 $price_to = isset($_GET['price_to']) ? $_GET['price_to'] : '';
 
-// Przygotuj zapytanie SQL z parametrami wyszukiwania
+// Zapytanie SQL z parametrami wyszukiwania
 $sql = "SELECT id, brand, model, year, price, image, description FROM vehicles WHERE brand=?";
 $params = [$brand];
 $types = 's';
@@ -153,10 +153,14 @@ if (isset($_POST['add_to_cart'])) {
                     echo "<p>Cena: " . $row["price"] . "zł</p>";
                     echo "<p>Opis: " . $row["description"] . "</p>";
                     if (isset($_SESSION['user_id'])) {
-                        if (!in_array($row['id'], $_SESSION['cart'] ?? [])) {
-                            echo "<button class='cart-button' onclick='addToCart(" . $row["id"] . ")'>Dodaj do koszyka</button>";
+                        if (isset($_SESSION['admin']) && $_SESSION['admin']) {
+                            echo "<p>Administratorzy nie mogą dodawać pojazdów do koszyka.</p>";
                         } else {
-                            echo "<button class='cart-button' onclick='removeFromCart(" . $row["id"] . ")'>Usuń z koszyka</button>";
+                            if (!in_array($row['id'], $_SESSION['cart'] ?? [])) {
+                                echo "<button class='cart-button' onclick='addToCart(" . $row["id"] . ")'>Dodaj do koszyka</button>";
+                            } else {
+                                echo "<button class='cart-button' onclick='removeFromCart(" . $row["id"] . ")'>Usuń z koszyka</button>";
+                            }
                         }
                     } else {
                         echo "<p>Musisz być zalogowany, aby dodać ten pojazd do koszyka.</p>";
